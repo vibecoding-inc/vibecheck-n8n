@@ -1,0 +1,89 @@
+{
+  "name": "Fetch GitHub Diff",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "repo"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d414581a-5064-49f7-b03f-4b7650525c6c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $json.repo }}/pulls/1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3.patch"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "37b09b32-3411-4ccf-9874-bc8a4f9fb3f7",
+      "name": "HTTP Request",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "repo": "vibecoding-inc/git-starter-assignment-ThisIsRaphael"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "versionId": "40f7e504-2ee7-4895-bac8-0fb04baa237d",
+  "meta": {
+    "instanceId": "7b66044f16082c974c490947324d0a7de8b348a21780018b88e2ab16fd9a55f9"
+  },
+  "id": "PbkjBgkdz9NUJmJw",
+  "tags": []
+}

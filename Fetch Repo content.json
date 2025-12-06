@@ -1,0 +1,339 @@
+{
+  "name": "Fetch Repo content",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $json.repoName }}/zipball/{{ $json.branch }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "1fed9366-9b29-43bc-8266-40ff71eb050a",
+      "name": "HTTP Request",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        -80
+      ],
+      "id": "1655dc64-4ddc-4eae-b8ec-676617099fce",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "9e08baff-de9b-47b8-9aed-709c86b18f08",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "=file",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "5706ad4a-c4eb-4d80-81ca-085e5eb898eb",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c7e01994-421c-405a-a707-342ddab199e4",
+              "name": "file",
+              "value": "={{ Object.keys($binary)[0] }}",
+              "type": "binary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -80
+      ],
+      "id": "a5be3b4f-b89e-460a-b055-3e28f7d1c861",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7e294380-2fbd-49f2-a8d8-270c0c0e2082",
+              "name": "content",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "ba6a6079-71ca-489c-a090-f470a2c175fe",
+              "name": "filename",
+              "value": "={{ $binary.file.fileName }}",
+              "type": "string"
+            },
+            {
+              "id": "41696de0-1eb7-463b-a607-d9c05235f37b",
+              "name": "directory",
+              "value": "={{ $binary.file.directory }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        -80
+      ],
+      "id": "2974a71e-bff9-4224-8089-290a0e53d285",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "repoName"
+            },
+            {
+              "name": "branch"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        -80
+      ],
+      "id": "20979760-faab-4fcc-bac0-875112932edb",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed7e29fe-8a34-4276-a5ad-5a40a51aee3f",
+              "name": "data",
+              "value": "=Directory: {{ $json.directory }}\nFile Name: {{ $json.filename }}\nContent follows below until EOF:\n{{ $json.content }}\nEOF\n---",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        -80
+      ],
+      "id": "3892a9b9-8e94-41cb-9029-3a0e9208bb5d",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "afd6eb87-48cf-4a3a-af7a-9d08504ec6ee",
+              "name": "content",
+              "value": "={{ $json.data.join(\"\\n\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        -80
+      ],
+      "id": "fcb0756d-af4d-4596-9997-e2349aac3c6c",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        -80
+      ],
+      "id": "0ae4eaf8-eb3b-43f6-9f28-6c49d1e097ce",
+      "name": "Aggregate"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "repoName": "vibecoding-inc/tool_runner",
+          "branch": "main"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "versionId": "428aa6ba-2ac0-4d77-94df-0b4030c81a22",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b66044f16082c974c490947324d0a7de8b348a21780018b88e2ab16fd9a55f9"
+  },
+  "id": "yxtxRgUpAXEGwDti",
+  "tags": []
+}

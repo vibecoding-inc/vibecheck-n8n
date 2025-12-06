@@ -1,0 +1,287 @@
+{
+  "name": "Add Line Comment to GitHub Pull Request",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "prNumber",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "36da5dab-dc4d-42f2-8c0c-fc59f84dd6e3",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "owner",
+              "value": "={{ $json.repo.split('/')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "name",
+              "value": "={{ $json.repo.split('/')[1] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c1e77329-b79c-4234-8b45-920b6d3b3ecf",
+      "name": "Parse Repository Owner and Name",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1392,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "repo"
+            },
+            {
+              "name": "filename"
+            },
+            {
+              "name": "line",
+              "type": "number"
+            },
+            {
+              "name": "content"
+            }
+          ]
+        }
+      },
+      "id": "49e9f1b3-3b41-46e4-9031-ae23f99858de",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.github.com/repos/' + $json.owner + '/' + $json.name + '/pulls/' + $('Workflow Configuration').first().json.prNumber }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "445dbcb6-cd40-429c-9897-fe863c55f1f6",
+      "name": "Get Latest Commit SHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1616,
+        -224
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/' + $('Parse Repository Owner and Name').item.json.owner + '/' + $('Parse Repository Owner and Name').item.json.name + '/pulls/' + $('Workflow Configuration').first().json.prNumber + '/comments' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { body: $('Parse Repository Owner and Name').item.json.content, commit_id: $('Get Latest Commit SHA').first().json.head.sha, path: $('Parse Repository Owner and Name').item.json.filename, line: Number($('Parse Repository Owner and Name').item.json.line), side: 'RIGHT' } }}",
+        "options": {}
+      },
+      "id": "11e033e6-5798-4265-9a7d-854acb5336da",
+      "name": "Add Line Comment to PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2288,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Import the native Node.js crypto module\nconst crypto = require('crypto');\n\n// --- CONFIGURATION ---\nconst appId = '2420920'; // e.g., \"123456\"\n// PASTE YOUR PEM KEY BETWEEN THE BACKTICKS BELOW\nconst privateKey = `-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAvNTp7CfKF8yIJtTxYLHVffUmBrzYc5NMEUlau9sZ95ydVboe\nVvV9grV/BKdlgoFu6H15QpOk9qu5G61YsVdWfen8XKTJPU4MKCt5gBNkHAgMUsUa\nY0xy2l0Z8RW6aHH3l3Kl9Ej9pRKaUjXSQYkhhCkmkT1xdw9xhCZMolaoi6TP/G5H\nKfnCQ9wt+Twm5fgEyMW/qDgtrXGYEgiGZ/EhQfCTLsAyC/wujBfzXEpS/EtdKzo6\n7Mw6u0KzS2jj6+Yag1Lwz5Qrg9PP9ZrEwSqXaQs9/6eF5Vuw7HqOM426XCusJNKZ\n0hUuVRfzT7czToy9WhQ4V8jaZXNo0J9bhElorwIDAQABAoIBAFZssD+ImoM39lyn\ne25BFjBXAjd1OS/0i40h4Kg4CHN+t7fjvj0YkIBBZ0gPAXOwn71CqDwjbQ4E3Gzh\ncsV/7rMkY39XYE9xqDi+ZRaMSXZW7KT5VzF5bNuqXtQrmKxy9NnY/EGJIqXplL3p\nqjiadb+SQfeZgpP2eoL8MHjgZrW6R3YwI32W61XIswxgDd8tAA0IOOImiSPJ7aXB\n8kYwXpTKAJLGXfpg4fKO4bmhyLY0WGHSa/uRi/MF00Jhw5r/NFculgEItK/HMzH+\nBkvSzif4Ff+BbPZkogAtM20cnOdWTv6x24OnuzqNj7zg6rXmNq+J2V3QtT2OH90f\nMdaEq2ECgYEA9jcvBR4FNKpCxwVSjez/HAq9tJRaaHFP71MLCaQchAKnm7ektHS8\nH6p+4UTgw65SNxPiQ/xDVHZcf76kP4/Ctgg5ugxz0PO4OvspQaKxlBdf1gUcL1kf\n7xeQ2XMWGKwQLiUh6bVK+8Cb7aamk9Ch23wSZJuQR/NCPH7RIxSBcfECgYEAxFXy\n4hnuhQrLn0GEpXco5ezx0/lakCvqNIOOv6aTkHX2VH76GKB4DUgPI1gnFGMa1JmT\nvmNs1THcMAyB85k/rH5rTLMkrLs+TTMJFkSfSHGlsCtMu01YIcFkZ7S28TlGs2jF\nd+GQqEE6zjkxvcq0khYgi2OUEGzjjfJPRlv55J8CgYEAn+5UgpRveTgnTDOu3jXV\nuBdaBpRe7Xy9GY3tm4OYaj93M/Tj7bvt/vu2kwk0nqb7DH/D97lC2vhPOUNSWV8+\ncROCu9Ee4dmOD/HZaKMPikxsmg6TskXIMnwyQK066yfJEtBX6QE0BbelEYewqE9a\n88DyCZvq6nGe0sDlhE3rj2ECgYBHsUbWjzeMt0txZOBF94QkqWgIymXqfU6xTFTE\n4NPDjX+cjR1P/tC3sNduRZNHm4TBmy7a971XADTyCq8tP4mDuEoAIO5EcL8oO3mW\n+wnazzz8XmNPhcen09GRGOkwnoSVoK1ywBgtiFwrz7C9KBbVvWS24W7ArLJPM+sE\nuzM96wKBgAFoWltwmGTXciqpgRU9OUlEl4RIsnjmlJFf4/RwVDOBwyujA8W0pNj6\n/Acr1qJsAPCA101uLxGdsstJybVsbTugoAwEOpNU685/oCE7cwqG2JpoAmWlrtZJ\nnHZ4amvFkXw6fFv4AuM1ZOsGfwRfwdRCFIlea5iOUL8jQnjauoFD\n-----END RSA PRIVATE KEY-----`;\n// ---------------------\n\n// Step 2: Create the claims\nconst now = Math.floor(Date.now() / 1000);\nconst payload = {\n  iat: now - 60,        // Issued at (60s in the past to handle clock drift)\n  exp: now + (10 * 60), // Expires (10 mins in the future, GitHub's max)\n  iss: appId            // Issuer (Your App ID)\n};\n\n// Step 3: Sign the JWT\nconst sign = crypto.createSign('RSA-SHA256');\nsign.update(JSON.stringify({ alg: 'RS256', typ: 'JWT' }) + '.' + JSON.stringify(payload));\n// Note: Manual JWT construction is tricky without libraries, \n// so we use n8n's built-in \"sign\" capability if available, \n// OR simpler: use the standard 'jsonwebtoken' library if your n8n allows it.\n// BELOW is a standard \"Raw Crypto\" way to sign if 'jsonwebtoken' isn't installed:\n\nfunction base64Url(str) {\n    return Buffer.from(str).toString('base64').replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n}\n\nconst header = { alg: 'RS256', typ: 'JWT' };\nconst encodedHeader = base64Url(JSON.stringify(header));\nconst encodedPayload = base64Url(JSON.stringify(payload));\nconst data = `${encodedHeader}.${encodedPayload}`;\n\nconst signature = crypto.createSign('RSA-SHA256').update(data).sign(privateKey, 'base64')\n    .replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n\nconst jwt = `${data}.${signature}`;\n\nreturn { json: { jwt } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -224
+      ],
+      "id": "cc5b601d-9bcc-47a6-b5e1-5bf692e59afb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/app/installations/98255250/access_tokens",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $node[\"Code in JavaScript\"].json[\"jwt\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2064,
+        -224
+      ],
+      "id": "132fa50e-93a1-422b-968c-60f8b0ed8822",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "Execute Workflow Trigger": [
+      {
+        "json": {
+          "repo": "vibecoding-inc/git-starter-assignment-ThisIsRaphael",
+          "filename": ".github/workflows/classroom.yml",
+          "line": 10,
+          "content": "Test Line 10"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Parse Repository Owner and Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Repository Owner and Name": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Commit SHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Commit SHA": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Add Line Comment to PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "versionId": "1fd87927-6843-401a-83f7-cd34730ec2db",
+  "meta": {
+    "instanceId": "7b66044f16082c974c490947324d0a7de8b348a21780018b88e2ab16fd9a55f9"
+  },
+  "id": "ljRyAt0DjKdG9JoN",
+  "tags": []
+}

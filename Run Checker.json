@@ -1,0 +1,110 @@
+{
+  "name": "Run Checker",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "studentRepo"
+            },
+            {
+              "name": "workflow"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "58e7ef13-8bb5-4855-b9c6-5f2c4d134506",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "workflow",
+        "operation": "dispatchAndWait",
+        "owner": {
+          "__rl": true,
+          "value": "vibecoding-inc",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "tool_runner",
+          "mode": "list",
+          "cachedResultName": "tool_runner",
+          "cachedResultUrl": "https://github.com/vibecoding-inc/tool_runner"
+        },
+        "workflowId": {
+          "__rl": true,
+          "value": "={{ $json.workflow }}",
+          "mode": "filename"
+        },
+        "ref": {
+          "__rl": true,
+          "value": "main",
+          "mode": "list",
+          "cachedResultName": "main"
+        },
+        "inputs": "={\n  \"target_repository\": \"{{ $json.studentRepo }}\"\n}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fa2dd182-04a0-4ca8-8350-fa46448778a8",
+      "name": "Dispatch a workflow event and wait for completion",
+      "webhookId": "d4fb1dfc-bf82-45c5-ac41-e07d068547b7",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "studentRepo": "vibecoding-inc/git-starter-assignment-ThisIsRaphael",
+          "workflow": "demo-lint.yml"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Dispatch a workflow event and wait for completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "versionId": "7e84a296-6a38-4d47-925c-1eb1fc22c388",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b66044f16082c974c490947324d0a7de8b348a21780018b88e2ab16fd9a55f9"
+  },
+  "id": "2rv0Mk7wuojGAsQP",
+  "tags": []
+}

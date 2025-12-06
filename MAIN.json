@@ -1,0 +1,647 @@
+{
+  "name": "MAIN",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Submit Repo",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Repo URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -848,
+        -144
+      ],
+      "id": "62a9952e-29f3-4d05-85f4-0d5845fd8042",
+      "name": "On form submission",
+      "webhookId": "982aff16-8896-4f12-8560-35cb0bf29746"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        416,
+        288
+      ],
+      "id": "8ec6b284-0515-4856-9790-431e4b48d613",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "t2tDbwixq3qYDgYU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.summary }}\n{{ $('Run Python Linter').item.json.summary }}\n\nYou are part of a system that will grade a code submission. Your output will be part of a dashboard that will be shown to a user.\nGrade your part from 0 (bad) to 100 (good). The details on what and how you should grade will be stated below.\nGrade each criteria on its own, and weight the several sub-categories for educational settings to the totalScore value.\n\nCategory Name: \"lint\"\n\nSub-category name: \"rules\"\nDoes the lint log reveal that the user didn't follow the formatting rules?\nIf it were relevant rules that have not been followed, deduct more points than if it were non-relevant rules\n\nRelevant rules are for example rules for maintanability, refactoring and readability.\nNot so relevant rules are for example indentation rules, out of place variable declarations (except thos affect readability and maintanability).\n\nIf you want to comment something in the code, call the tool that was appended to you and add it to Github.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        272,
+        -144
+      ],
+      "id": "761b670f-11b6-4519-86ad-e97ee8d87558",
+      "name": "Lint Agent"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yxtxRgUpAXEGwDti",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yxtxRgUpAXEGwDti",
+          "cachedResultName": "Fetch Repo content"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "repoName": "={{ $json['Repo URL'] }}",
+            "branch": "master"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "repoName",
+              "displayName": "repoName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "branch",
+              "displayName": "branch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        -144
+      ],
+      "id": "23f35666-864b-4c34-bf3f-417bfa674752",
+      "name": "Call 'Fetch Repo content'"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a system that will grade a code submission. Your output will be part of a dashboard that will be shown to a user.\nGrade your part from 0 (bad) to 100 (good). The details on what and how you should grade will be stated below.\nGrade each criteria on its own, and weight the several sub-categories for educational settings to the totalScore value.\n\nCategory Name: \"out-of-scope\"\n\nSub-category name: \"scope\"\nWas the code changed within the scope of the task?\nIf yes, that is good, if not, that is bad.\n\nSub-category name: \"minimal\"\nWas more than necessary changed to reach the goal?\nIf the goal could have been reached by changing less, that is bad. If it was reached with almost minimal code, that is good.\n\nExamples for minimal:\nIf the problem was solved by adding one method and using default libraries or using already exisiting functions, the methods are kept simple and readable,\nand the function is using no unnecessary overhead and is programmed with an efficient algorithm, thats good.\nIt is *not* good if the code was just crammed into existing functions, are duplicating code and is trying to \"reinvent the wheel\". It may be a bit shorter, but that is not the goal of this grade. The goal of this grade is to rate if the problem was solved efficiently and using existing code.\n\nThis is what the user has been changing:\n{{ $('Call \\'Fetch GitHub Diff\\'').item.json.data }}\n\nAnd this is the whole code:\n\n{{ $('Call \\'Fetch Repo content\\'').item.json.content }}\n\nYou should tutor the user on what could be done to improve the score / to explain their mistakes. For this do comment directly on GitHub on the users submission.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        848,
+        -144
+      ],
+      "id": "19638280-294b-409a-8f63-1f6472e42bf8",
+      "name": "Out-Of-Scope Detector"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a system that will grade a code submission. Your output will be part of a dashboard that will be shown to a user.\nGrade your part from 0 (bad) to 100 (good). The details on what and how you should grade will be stated below.\nGrade each criteria on its own, and weight the several sub-categories for educational settings to the totalScore value.\n\n\nCategory Name: \"doc\"\n\nSub-category name: \"useful\"\nAre the comments that the user has provided useful for understanding the code and the code choices?\nIf the comments are useless or are just a word-by-word replica of the code and are not adding useful information, deduct more points.\n\nPositive examples:\n\n```\n//Loop over all elements to store them to production database\nfor(int i = 0; i < arr.count, i++) {\n    arr[i].store(5); //Mode 5 = JSON\n}\n```\n\n```\nmalloc(1024 * sizeof(int)) // = 4096 Bytes, enough because Array cannot be larger\n```\n\nNegative examples:\n\n```\nint c = a + b; //Adds a and b and stores it in c\n```\n\n```\nwhile(true) { //Never stops\n\n    i++; //Increments i\n    System.out.println(i); //Outputs i in console\n}\n```\n\n\nSub-category name: \"amount\"\nDid the user comment in a normal amount?\nIf the user commented less than it would be perfect, deduct points according to how much of the code is not explained or is difficult to understand.\nIf no comments were necessary in the code that was changed, and the user did not comment, set all subscores and the total scores to 100.\n\n\nExample for no comment needed:\n```\n\nfloat multiplyAllNumbers(float[] array) {\n\n    float result = 1;\n    for(float f : array) {\n        result *= f;\n    }\n    return result;\n}\n\n```\nThis example does not need any comments as the variable names are chosen very clearly and the code complexity is not high. It may be argued that for documentation reason the function itself may need a comment like \"Accepts array and multiplies all numbers in that array\", but only accept that if it is used for automatic documentation tools like JavaDoc.\n\n{{ $('Call \\'Fetch Repo content\\'').item.json.content }}\n\nYou should tutor the user on what could be done to improve the score / to explain their mistakes. For this do comment directly on GitHub on the users submission.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1552,
+        -144
+      ],
+      "id": "e415df15-6a8c-4d08-99fa-2d9b0617df18",
+      "name": "Documentation Checker"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"title\": \"Single Category Scoring Report (Revised)\",\n  \"description\": \"Schema for a single set of scoring data, including a total score, detailed breakdown, and overall textual feedback.\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"The main category name for the overall score.\"\n    },\n    \"totalScore\": {\n      \"type\": \"number\",\n      \"description\": \"The aggregated final score for this category.\"\n    },\n    \"detailedScoring\": {\n      \"description\": \"An object containing scores for sub-categories.\",\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"number\",\n        \"description\": \"The score assigned to an individual sub-category.\"\n      }\n    },\n    \"feedback\": {\n      \"type\": \"string\",\n      \"description\": \"Overall textual feedback provided for this category.\"\n    }\n  },\n  \"required\": [\n    \"category\",\n    \"totalScore\",\n    \"detailedScoring\",\n    \"feedback\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        80
+      ],
+      "id": "f19ee862-0d0d-4ba2-943f-829852a26dda",
+      "name": "Category JSON Parser"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"title\": \"Comprehensive Scoring Report (Final)\",\n  \"description\": \"Schema for a complete report containing a global score and an array of individual category scoring breakdowns, each including feedback.\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"globalScore\": {\n      \"type\": \"number\",\n      \"description\": \"The overall final score for the entire report.\"\n    },\n    \"categoryScores\": {\n      \"type\": \"array\",\n      \"description\": \"A list of objects, each detailing the score and feedback for a specific category.\",\n      \"items\": {\n        \"type\": \"object\",\n        \"required\": [ \"category\", \"totalScore\", \"detailedScoring\", \"feedback\" ],\n        \"properties\": {\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"The name of this specific category.\"\n          },\n          \"totalScore\": {\n            \"type\": \"number\",\n            \"description\": \"The aggregated score for this specific category.\"\n          },\n          \"detailedScoring\": {\n            \"description\": \"An object containing scores for sub-categories within this category.\",\n            \"type\": \"object\",\n            \"additionalProperties\": {\n              \"type\": \"number\",\n              \"description\": \"The score assigned to an individual sub-category.\"\n            }\n          },\n          \"feedback\": {\n            \"type\": \"string\",\n            \"description\": \"Overall textual feedback provided for this category.\"\n          }\n        }\n      }\n    }\n  },\n  \"required\": [\n    \"globalScore\",\n    \"categoryScores\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1904,
+        80
+      ],
+      "id": "984c9a12-f08f-48e4-949d-4f07ce4ebb85",
+      "name": "Combination JSON Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Based on the provided JSONs of several sub agents that are grading a coding submission, how high would you grade the global score, a.k.a. the score of the total assignment from 0 (bad) to 100 (good)?\nKeep the score between 0 and 100.\nFor example: 0.8 will turn into 80, 1.0 will turn into 100, and 0.1 will turn into 10.\n\nYou will output a combined JSON with everything included, but your global score will be a value in this string.\n\nDo not change any values, you only decide on the global Score.\n\nYou may reduce the feedback if you think it is too much. Dont cut anything relevant away though which might be important for personal code development, understanding of the assignments or similiar.\n\nRename the categories so it is typed correctly (\"out-of-scope\" becomes \"Out of Scope\")\n\n{{JSON.stringify($json.output)}}\n\n{{JSON.stringify($('Out-Of-Scope Detector').item.json.output) }}\n\n{{ JSON.stringify($('Lint Agent').item.json.output) }}\n\n{{ JSON.stringify($('Style Agent').item.json.output) }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1904,
+        -144
+      ],
+      "id": "a5121ce1-d05c-437f-9bfb-eb649dd8c417",
+      "name": "Master Agent"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PbkjBgkdz9NUJmJw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PbkjBgkdz9NUJmJw",
+          "cachedResultName": "Fetch GitHub Diff"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "repo": "={{ $('On form submission').item.json['Repo URL'] }}"
+          },
+          "matchingColumns": [
+            "repo"
+          ],
+          "schema": [
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        -144
+      ],
+      "id": "f32baba3-a7af-4f92-aac8-9c6eb33370eb",
+      "name": "Call 'Fetch GitHub Diff'"
+    },
+    {
+      "parameters": {
+        "description": "This tool adds a review comment on a specific line in the GitHub Pull Request.",
+        "workflowId": {
+          "__rl": true,
+          "value": "ljRyAt0DjKdG9JoN",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ljRyAt0DjKdG9JoN",
+          "cachedResultName": "Add Line Comment to GitHub Pull Request"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "repo": "={{ $('On form submission').item.json['Repo URL'] }}",
+            "filename": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('filename', ``, 'string') }}",
+            "line": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('line', ``, 'string') }}",
+            "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('content', `markdown`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "filename",
+              "displayName": "filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "line",
+              "displayName": "line",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        352
+      ],
+      "id": "cd6cd8fc-d33d-40c8-a041-a6b860fe7f29",
+      "name": "Call 'Add Line Comment to GitHub Pull Request'"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a system that will grade a code submission. Your output will be part of a dashboard that will be shown to a user.\nGrade your part from 0 (bad) to 100 (good). The details on what and how you should grade will be stated below.\nGrade each criteria on its own, and weight the several sub-categories for educational settings to the totalScore value.\n\nCategory Name: \"style\"\n\nSub-category name: \"variables\"\nDid the user follow the variable naming convention of the surrounding code?\nIf not, deduct points by how important the variable is.\n\nSub-category name: \"comments\"\nDid the user follow the style of commenting and documenting the code?\nIf not, deduct points. Do not grade the content of the comments as this is part of another agent.\n\nSub-category name: \"code\"\nDid the user follow he style for brackets, code, loops, loop design, and where the variables were declared and defined?\nIf not, deduct points by how far it diverges from the surrounding code and how unreadable it is.\n\nThis is what the user has been changing:\n{{ $('Call \\'Fetch GitHub Diff\\'').item.json.data }}\n\nAnd this is the whole code:\n\n{{ $('Call \\'Fetch Repo content\\'').item.json.content }}\n\nYou should tutor the user on what could be done to improve the score / to explain their mistakes. For this do comment directly on GitHub on the users submission.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        -144
+      ],
+      "id": "be1e1278-dd32-4a30-812a-3aabd48439fa",
+      "name": "Style Agent"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "workflow",
+        "operation": "dispatchAndWait",
+        "owner": {
+          "__rl": true,
+          "value": "vibecoding-inc",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "tool_runner",
+          "mode": "list",
+          "cachedResultName": "tool_runner",
+          "cachedResultUrl": "https://github.com/vibecoding-inc/tool_runner"
+        },
+        "workflowId": {
+          "__rl": true,
+          "value": 213556797,
+          "mode": "list",
+          "cachedResultName": "Python Linter"
+        },
+        "ref": {
+          "__rl": true,
+          "value": "main",
+          "mode": "list",
+          "cachedResultName": "main"
+        },
+        "inputs": "={\n  \"target_repository\": \"{{ $('On form submission').item.json['Repo URL'] }}\"\n}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -144
+      ],
+      "id": "de328a3d-8c69-4b6b-8a34-dc4d11c71c63",
+      "name": "Run Python Linter",
+      "webhookId": "d4fb1dfc-bf82-45c5-ac41-e07d068547b7",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "workflow",
+        "operation": "dispatchAndWait",
+        "owner": {
+          "__rl": true,
+          "value": "vibecoding-inc",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "tool_runner",
+          "mode": "list",
+          "cachedResultName": "tool_runner",
+          "cachedResultUrl": "https://github.com/vibecoding-inc/tool_runner"
+        },
+        "workflowId": {
+          "__rl": true,
+          "value": 213556798,
+          "mode": "list",
+          "cachedResultName": "Python Test Runner"
+        },
+        "ref": {
+          "__rl": true,
+          "value": "main",
+          "mode": "list",
+          "cachedResultName": "main"
+        },
+        "inputs": "={\n  \"target_repository\": \"{{ $('On form submission').item.json['Repo URL'] }}\"\n}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        -144
+      ],
+      "id": "2f4ed877-19ad-42ea-84d9-8308d917a3e6",
+      "name": "Run Python Test Runner",
+      "webhookId": "d4fb1dfc-bf82-45c5-ac41-e07d068547b7",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "uXFC8i4rljZbA2B3",
+          "name": "GitHub account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "Repo URL": "vibecoding-inc/python-fixme-rnbwdsh",
+          "submittedAt": "2025-12-06T10:46:42.795+01:00",
+          "formMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Call 'Fetch Repo content'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Category JSON Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Lint Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Out-Of-Scope Detector",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Documentation Checker",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Master Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Combination JSON Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Style Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lint Agent": {
+      "main": [
+        [
+          {
+            "node": "Out-Of-Scope Detector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Fetch Repo content'": {
+      "main": [
+        [
+          {
+            "node": "Call 'Fetch GitHub Diff'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Out-Of-Scope Detector": {
+      "main": [
+        [
+          {
+            "node": "Style Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Category JSON Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Lint Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          },
+          {
+            "node": "Out-Of-Scope Detector",
+            "type": "ai_outputParser",
+            "index": 0
+          },
+          {
+            "node": "Documentation Checker",
+            "type": "ai_outputParser",
+            "index": 0
+          },
+          {
+            "node": "Style Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documentation Checker": {
+      "main": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combination JSON Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Fetch GitHub Diff'": {
+      "main": [
+        [
+          {
+            "node": "Run Python Linter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Add Line Comment to GitHub Pull Request'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Lint Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Out-Of-Scope Detector",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Style Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Documentation Checker",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Style Agent": {
+      "main": [
+        [
+          {
+            "node": "Documentation Checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Python Linter": {
+      "main": [
+        [
+          {
+            "node": "Run Python Test Runner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Python Test Runner": {
+      "main": [
+        [
+          {
+            "node": "Lint Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7666e86-029b-4ef7-b633-2ea5cef76767",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b66044f16082c974c490947324d0a7de8b348a21780018b88e2ab16fd9a55f9"
+  },
+  "id": "EFJgq1EGVdkGHHWa",
+  "tags": []
+}
